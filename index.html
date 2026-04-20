@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중국어 성조 & 뜻 맞추기 퀴즈</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .progress {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .question-box {
+            background-color: #eef2f5;
+            border-radius: 10px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pinyin {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            letter-spacing: 1px;
+        }
+        .answer-box {
+            min-height: 60px;
+            margin-bottom: 25px;
+            font-size: 20px;
+            color: #e74c3c;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; /* 처음에 숨김 */
+            transition: opacity 0.3s ease;
+        }
+        .answer-box.show {
+            opacity: 1; /* 정답 확인 시 보임 */
+        }
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 5px;
+            width: 45%;
+        }
+        .btn-check {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-check:hover {
+            background-color: #2980b9;
+        }
+        .btn-next {
+            background-color: #2ecc71;
+            color: white;
+            display: none; /* 처음에 숨김 */
+        }
+        .btn-next:hover {
+            background-color: #27ae60;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>🇨🇳 중국어 단어 퀴즈</h1>
+    <div class="progress" id="progress">문제 1 / 83</div>
+    
+    <div class="question-box">
+        <div class="pinyin" id="pinyin-display">로딩 중...</div>
+    </div>
+    
+    <div class="answer-box" id="answer-display">
+        뜻이 여기에 표시됩니다.
+    </div>
+    
+    <div class="button-group">
+        <button class="btn-check" id="btn-check" onclick="checkAnswer()">정답 확인</button>
+        <button class="btn-next" id="btn-next" onclick="nextQuestion()">다음 문제</button>
+    </div>
+</div>
+
+<script>
+    // 사진 4장에서 추출한 전체 데이터 (총 83개)
+    const rawData = [
+        // 사진 1
+        { pinyin: "nǐ", meaning: "너, 당신" },
+        { pinyin: "hǎo", meaning: "안녕하다" },
+        { pinyin: "nǐ hǎo", meaning: "안녕하세요 [만날 때 하는 인사]" },
+        { pinyin: "zài", meaning: "다시" },
+        { pinyin: "jiàn", meaning: "만나다" },
+        { pinyin: "zàijiàn", meaning: "잘 가, 안녕 [헤어질 때 하는 인사]" },
+        { pinyin: "xiè", meaning: "감사하다" },
+        { pinyin: "xièxie", meaning: "감사합니다" },
+        { pinyin: "bù", meaning: "~하지 않다 [부정]" },
+        { pinyin: "kèqi", meaning: "사양하다" },
+        { pinyin: "bú kèqi", meaning: "천만에요 (불객기)" },
+        { pinyin: "duìbuqǐ", meaning: "미안합니다, 죄송합니다" },
+        { pinyin: "méi(yǒu)", meaning: "없다" },
+        { pinyin: "guānxi", meaning: "관계" },
+        { pinyin: "méi guānxi", meaning: "괜찮습니다" },
+        
+        // 사진 2
+        { pinyin: "zuìjìn", meaning: "최근, 요즘" },
+        { pinyin: "zěnmeyàng", meaning: "어떠한가" },
+        { pinyin: "zuìjìn zěnmeyàng", meaning: "요즘 어떻습니까?" },
+        { pinyin: "hái", meaning: "그런대로, 비교적" },
+        { pinyin: "kěyǐ", meaning: "좋다, 괜찮다" },
+        { pinyin: "hái kěyǐ", meaning: "그런대로 괜찮습니다" },
+        { pinyin: "shēntǐ", meaning: "몸, 신체" },
+        { pinyin: "ma", meaning: "[의문을 나타내는 조사] ~입니까?" },
+        { pinyin: "hěn", meaning: "아주, 매우" },
+        { pinyin: "ne", meaning: "[의문을 나타내는 조사] ~는요?" },
+        { pinyin: "wǒ", meaning: "나, 저" },
+        { pinyin: "yě", meaning: "~도 (또한)" },
+        { pinyin: "hǎo", meaning: "꽤, 매우" }, // 중복 단어지만 문맥 뜻이 다름
+        { pinyin: "jiǔ", meaning: "오래다" },
+        { pinyin: "hǎo jiǔ bú jiàn", meaning: "오랜만입니다" },
+        { pinyin: "gōngzuò", meaning: "일" },
+        { pinyin: "máng", meaning: "바쁘다" },
+        { pinyin: "gōngzuò máng", meaning: "일이 바쁘다" },
+
+        // 사진 3
+        { pinyin: "nǎ", meaning: "어느" },
+        { pinyin: "guó", meaning: "나라, 국가" },
+        { pinyin: "rén", meaning: "사람" },
+        { pinyin: "nǎ guó rén", meaning: "어느 나라 사람" },
+        { pinyin: "Zhōngguó", meaning: "중국 [국가명]" },
+        { pinyin: "Zhōngguó rén", meaning: "중국인" },
+        { pinyin: "Hánguó", meaning: "한국 [국가명]" },
+        { pinyin: "Hánguó rén", meaning: "한국인" },
+        { pinyin: "zuò", meaning: "하다, 일하다, 종사하다" },
+        { pinyin: "gōngzuò", meaning: "일하다" }, // 명사/동사 구분
+        { pinyin: "zhōngxué", meaning: "중학교(중·고등학교)" },
+        { pinyin: "lǎoshī", meaning: "선생님, 스승" },
+        { pinyin: "jiāo", meaning: "가르치다" },
+        { pinyin: "Yīngyǔ", meaning: "영어" },
+        { pinyin: "zài", meaning: "~에(서)" }, // 동음이의어
+        { pinyin: "nǎr", meaning: "어디" },
+        { pinyin: "yínháng", meaning: "은행" },
+        { pinyin: "men", meaning: "~들 [복수를 나타냄]" },
+        { pinyin: "nǐmen", meaning: "너희들" },
+        { pinyin: "wǒmen", meaning: "우리들" },
+        { pinyin: "xuéshēng", meaning: "학생" },
+        { pinyin: "Běijīng Dàxué", meaning: "베이징 대학교" },
+        { pinyin: "niàn shū", meaning: "공부하다, 책을 읽다" },
+
+        // 사진 4
+        { pinyin: "lǎo", meaning: "[항렬을 나타냄]" },
+        { pinyin: "lǎodà", meaning: "맏이, 첫째" },
+        { pinyin: "lǎo'èr", meaning: "둘째" },
+        { pinyin: "lǎoyāo", meaning: "막내" },
+        { pinyin: "yǒu", meaning: "가지고 있다, 소유하다" },
+        { pinyin: "yī", meaning: "1, 하나" },
+        { pinyin: "èr", meaning: "2, 둘" },
+        { pinyin: "sān", meaning: "3, 셋" },
+        { pinyin: "shí", meaning: "10, 열" },
+        { pinyin: "gè", meaning: "개, 명, 사람 [양사]" },
+        { pinyin: "gēge", meaning: "형, 오빠" },
+        { pinyin: "jiějie", meaning: "누나, 언니" },
+        { pinyin: "dìdi", meaning: "남동생" },
+        { pinyin: "bàba", meaning: "아빠" },
+        { pinyin: "māma", meaning: "엄마" },
+        { pinyin: "xiōngdì", meaning: "형제" },
+        { pinyin: "jiěmèi", meaning: "자매" },
+        { pinyin: "érzi", meaning: "아들" },
+        { pinyin: "hé", meaning: "~와" },
+        { pinyin: "jiā", meaning: "집, 가정" },
+        { pinyin: "jǐ", meaning: "몇" },
+        { pinyin: "kǒu", meaning: "식구 [가족을 세는 양사]" },
+        { pinyin: "jīnnián", meaning: "금년, 올해" },
+        { pinyin: "duō", meaning: "얼마나" },
+        { pinyin: "dà", meaning: "크다, (나이가) 많다" },
+        { pinyin: "duō dà", meaning: "(나이가) 얼마인가" },
+        { pinyin: "suì", meaning: "살, 세 [나이를 세는 단위]" }
+    ];
+
+    let quizData = [];
+    let currentIndex = 0;
+
+    // 배열을 랜덤하게 섞는 함수 (피셔-예이츠 알고리즘)
+    function shuffleArray(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // 퀴즈 초기화
+    function initQuiz() {
+        quizData = shuffleArray([...rawData]); // 원본 배열 복사 후 섞기
+        currentIndex = 0;
+        showQuestion();
+    }
+
+    // 문제 화면에 표시
+    function showQuestion() {
+        document.getElementById('progress').innerText = `문제 ${currentIndex + 1} / ${quizData.length}`;
+        document.getElementById('pinyin-display').innerText = quizData[currentIndex].pinyin;
+        
+        // 정답 숨기기 및 버튼 상태 변경
+        document.getElementById('answer-display').classList.remove('show');
+        document.getElementById('answer-display').innerText = quizData[currentIndex].meaning;
+        
+        document.getElementById('btn-check').style.display = 'block';
+        document.getElementById('btn-check').style.width = '100%';
+        
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('btn-next').style.width = '45%';
+    }
+
+    // 정답 확인 버튼 클릭 시
+    function checkAnswer() {
+        document.getElementById('answer-display').classList.add('show');
+        
+        // 버튼 레이아웃 변경 (확인 버튼 줄이고 다음 버튼 표시)
+        document.getElementById('btn-check').style.width = '45%';
+        document.getElementById('btn-next').style.display = 'block';
+    }
+
+    // 다음 문제 버튼 클릭 시
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex >= quizData.length) {
+            alert("모든 문제를 다 풀었습니다! 다시 처음부터 섞어서 시작합니다.");
+            initQuiz();
+        } else {
+            showQuestion();
+        }
+    }
+
+    // 페이지 로드 시 퀴즈 시작
+    window.onload = initQuiz;
+
+</script>
+
+</body>
+</html>
