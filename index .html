@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>중국어 성조 퀴즈 (중복 제거 완벽 버전)</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --secondary: #357ABD;
+            --bg-color: #F4F7F6;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-muted: #888888;
+            --correct: #2ECC71;
+            --wrong: #E74C3C;
+            --accent: #F39C12;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        #home-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-lesson {
+            background-color: var(--card-bg);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-lesson:active {
+            background-color: var(--primary);
+            color: white;
+            transform: scale(0.97);
+        }
+
+        .btn-all {
+            background-color: var(--accent);
+            color: white;
+            padding: 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .btn-all:active {
+            transform: scale(0.97);
+        }
+
+        #status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-muted);
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        #card {
+            position: relative;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 50px 20px 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+            word-break: keep-all;
+        }
+
+        .lesson-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--bg-color);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .pinyin {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        #answer-section {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .hanzi {
+            font-size: 42px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .meaning {
+            font-size: 20px;
+            color: var(--text-muted);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; width: 100%; }
+        .btn-correct { background-color: var(--correct); color: white; }
+        .btn-wrong { background-color: var(--wrong); color: white; }
+        .btn-outline { background-color: transparent; border: 2px solid var(--text-muted); color: var(--text-muted); }
+
+        #result-screen {
+            display: none;
+            text-align: center;
+            background: var(--card-bg);
+            padding: 40px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        #result-screen h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        #result-screen p {
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: var(--text-muted);
+        }
+
+        .hidden { display: none !important; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header>
+        <h1>중국어 성조 마스터</h1>
+        <p id="current-mode-text" style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">100점 기원! 완벽 대비 (중복 제거됨)</p>
+    </header>
+
+    <!-- 메인 홈 화면 -->
+    <div id="home-screen">
+        <h3 style="text-align: center; color: var(--text-main); margin-bottom: 5px;">학습할 단원을 선택하세요</h3>
+        <button class="btn-all" onclick="startAllQuiz()">🌟 전체 단원 모의고사 (통합본)</button>
+        <div class="lesson-grid">
+            <button class="btn-lesson" onclick="startLessonQuiz('7')">제 7과</button>
+            <button class="btn-lesson" onclick="startLessonQuiz('9')">제 9과</button>
+            <button class="btn-lesson" onclick="startLessonQuiz('10')">제 10과</button>
+            <button class="btn-lesson" onclick="startLessonQuiz('11')">제 11과</button>
+            <button class="btn-lesson" onclick="startLessonQuiz('12')">제 12과</button>
+            <button class="btn-lesson" onclick="startLessonQuiz('13')">제 13과</button>
+            <button class="btn-lesson" style="grid-column: span 2;" onclick="startLessonQuiz('14')">제 14과</button>
+        </div>
+    </div>
+
+    <!-- 퀴즈 진행 화면 -->
+    <div id="quiz-container" style="display: none;">
+        <div id="status-bar">
+            <span id="progress">진행: 0 / 0</span>
+            <span id="score-display">점수: 0</span>
+        </div>
+
+        <div id="card">
+            <!-- 어느 과에서 나왔는지 알려주는 뱃지 -->
+            <div id="lesson-badge-display" class="lesson-badge"></div>
+            
+            <div class="pinyin" id="pinyin-display"></div>
+            <div id="answer-section">
+                <div class="hanzi" id="hanzi-display"></div>
+                <div class="meaning" id="meaning-display"></div>
+            </div>
+        </div>
+
+        <div class="controls" id="control-show">
+            <button class="btn-primary" onclick="showAnswer()">정답 보기</button>
+        </div>
+        
+        <div class="controls hidden" id="control-judge">
+            <button class="btn-wrong" onclick="nextQuestion(false)">틀렸어요 ❌</button>
+            <button class="btn-correct" onclick="nextQuestion(true)">맞았어요 ⭕</button>
+        </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen">
+        <h2>퀴즈 완료!</h2>
+        <p id="final-score"></p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn-wrong hidden" id="btn-retry-wrong" onclick="retryWrong()">틀린 문제 다시 풀기</button>
+            <button class="btn-primary" onclick="restartCurrentMode()">현재 모드 다시 풀기</button>
+            <button class="btn-outline" onclick="goHome()">메인 화면으로 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 과별 순수 데이터
+    var quizData = {
+        "7": [
+            { pinyin: "xiànzài", hanzi: "现在", meaning: "지금, 현재" },
+            { pinyin: "diǎn", hanzi: "点", meaning: "시(時)" },
+            { pinyin: "liǎng", hanzi: "两", meaning: "2, 둘" },
+            { pinyin: "bàn", hanzi: "半", meaning: "반, 30분" },
+            { pinyin: "liǎng diǎn bàn", hanzi: "两点半", meaning: "두 시 반" },
+            { pinyin: "shàng kè", hanzi: "上课", meaning: "수업하다" },
+            { pinyin: "jīntiān", hanzi: "今天", meaning: "오늘" },
+            { pinyin: "yuè", hanzi: "月", meaning: "월, 달" },
+            { pinyin: "hào", hanzi: "号", meaning: "일, 날짜" },
+            { pinyin: "jǐ yuè jǐ hào", hanzi: "几月几号", meaning: "몇 월 며칠" },
+            { pinyin: "xīngqī", hanzi: "星期", meaning: "주, 요일" },
+            { pinyin: "xīngqī jǐ", hanzi: "星期几", meaning: "무슨 요일" },
+            { pinyin: "xīngqīwǔ", hanzi: "星期五", meaning: "금요일" },
+            { pinyin: "xīngqīliù", hanzi: "星期六", meaning: "토요일" },
+            { pinyin: "xià ge xīngqī", hanzi: "下个星期", meaning: "다음 주" },
+            { pinyin: "ba", hanzi: "吧", meaning: "~하자, ~해라 [조사]" },
+            { pinyin: "de", hanzi: "的", meaning: "~의" },
+            { pinyin: "shēngrì", hanzi: "生日", meaning: "생일" },
+            { pinyin: "nàme", hanzi: "那么", meaning: "그러면, 그렇다면" },
+            { pinyin: "hòutiān", hanzi: "后天", meaning: "모레" },
+            { pinyin: "duì", hanzi: "对", meaning: "맞다, 옳다" },
+            { pinyin: "lái", hanzi: "来", meaning: "오다" },
+            { pinyin: "fēn", hanzi: "分", meaning: "분" },
+            { pinyin: "kè", hanzi: "刻", meaning: "15분" },
+            { pinyin: "chà", hanzi: "差", meaning: "부족하다, ~전" },
+            { pinyin: "shàngwǔ", hanzi: "上午", meaning: "오전" },
+            { pinyin: "xiàwǔ", hanzi: "下午", meaning: "오후" },
+            { pinyin: "nián", hanzi: "年", meaning: "년" },
+            { pinyin: "qiánnián", hanzi: "前年", meaning: "재작년" },
+            { pinyin: "qùnián", hanzi: "去年", meaning: "작년" },
+            { pinyin: "jīnnián", hanzi: "今年", meaning: "올해" },
+            { pinyin: "míngnián", hanzi: "明年", meaning: "내년" },
+            { pinyin: "hòunián", hanzi: "后年", meaning: "내후년" },
+            { pinyin: "shàng ge xīngqī", hanzi: "上个星期", meaning: "지난주" },
+            { pinyin: "zhè ge xīngqī", hanzi: "这个星期", meaning: "이번 주" },
+            { pinyin: "zhè ge yuè", hanzi: "这个月", meaning: "이번 달" },
+            { pinyin: "shàng ge yuè", hanzi: "上个月", meaning: "지난달" },
+            { pinyin: "xià ge yuè", hanzi: "下个月", meaning: "다음 달" },
+            { pinyin: "xīngqītiān", hanzi: "星期天", meaning: "일요일" },
+            { pinyin: "xīngqīyī", hanzi: "星期一", meaning: "월요일" },
+            { pinyin: "xīngqī'èr", hanzi: "星期二", meaning: "화요일" },
+            { pinyin: "xīngqīsān", hanzi: "星期三", meaning: "수요일" },
+            { pinyin: "xīngqīsì", hanzi: "星期四", meaning: "목요일" },
+            { pinyin: "qiántiān", hanzi: "前天", meaning: "그제" },
+            { pinyin: "zuótiān", hanzi: "昨天", meaning: "어제" },
+            { pinyin: "qù", hanzi: "去", meaning: "가다" },
+            { pinyin: "xià kè", hanzi: "下课", meaning: "수업을 마치다" },
+            { pinyin: "chī fàn", hanzi: "吃饭", meaning: "밥을 먹다" },
+            { pinyin: "Shèngdàn Jié", hanzi: "圣诞节", meaning: "성탄절" },
+            { pinyin: "Xiànzài jǐ diǎn?", hanzi: "现在几点？", meaning: "지금 몇 시입니까?" },
+            { pinyin: "Nǐ jǐ diǎn shàng kè?", hanzi: "你几点上课？", meaning: "몇 시에 수업입니까?" },
+            { pinyin: "Jīntiān jǐ yuè jǐ hào?", hanzi: "今天几月几号？", meaning: "오늘은 몇 월 며칠입니까?" },
+            { pinyin: "Jīntiān xīngqī jǐ?", hanzi: "今天星期几？", meaning: "오늘은 무슨 요일입니까?" },
+            { pinyin: "Xiànzài liǎng diǎn bàn.", hanzi: "现在两点半。", meaning: "지금 2시 반입니다." },
+            { pinyin: "Sān diǎn.", hanzi: "三点。", meaning: "세 시." },
+            { pinyin: "Wǔ yuè sān hào.", hanzi: "五月三号。", meaning: "5월 3일." },
+            { pinyin: "Xià ge xīngqīliù shì shí'èr hào ba?", hanzi: "下个星期六是十二号吧？", meaning: "다음 주 토요일은 12일이죠?" },
+            { pinyin: "Xià ge xīngqīliù bú shì shí'èr hào, shì shíyī hào.", hanzi: "下个星期六不是十二号，是十一号。", meaning: "다음 주 토요일은 12일이 아니고 11일입니다." },
+            { pinyin: "Nǐ de shēngrì shì jǐ yuè jǐ hào?", hanzi: "你的生日是几月几号？", meaning: "당신 생일은 몇 월 며칠입니까?" },
+            { pinyin: "Sān yuè sì hào. Nǐ ne?", hanzi: "三月四号。你呢？", meaning: "3월 4일입니다. 당신은요?" },
+            { pinyin: "Nàme hòutiān shì nǐ de shēngrì, duì ba?", hanzi: "那么后天是你的生日，对吧？", meaning: "그러면 모레가 당신 생일이군요, 맞죠?" },
+            { pinyin: "Duì. Hòutiān lái wǒ jiā ba.", hanzi: "对。后天来我家吧。", meaning: "맞습니다. 모레 우리 집에 오세요." },
+            { pinyin: "Xiànzài sān diǎn shí fēn.", hanzi: "现在三点十分。", meaning: "지금은 3시 10분입니다." },
+            { pinyin: "Hòutiān xīngqīyī.", hanzi: "后天星期一。", meaning: "모레는 월요일입니다." },
+            { pinyin: "Xiànzài bú shì sān diǎn shí fēn.", hanzi: "现在不是三点十分。", meaning: "지금은 3시 10분이 아닙니다." },
+            { pinyin: "Jīntiān bú shì wǔ yuè sān hào.", hanzi: "今天不是五月三号。", meaning: "오늘은 5월 3일이 아닙니다." },
+            { pinyin: "Tā yǒu dìdi ba?", hanzi: "他有弟弟吧？", meaning: "그는 남동생이 있죠?" },
+            { pinyin: "Nǐ shì Zhōngguó rén ba?", hanzi: "你是中国人吧？", meaning: "당신은 중국인이죠?" },
+            { pinyin: "Míngtiān lái wǒ jiā ba.", hanzi: "明天来我家吧。", meaning: "내일 우리 집에 오세요." },
+            { pinyin: "Wǒmen qù shūdiàn ba.", hanzi: "我们去书店吧。", meaning: "우리 서점에 갑시다." }
+        ],
+        "9": [
+            { pinyin: "yào", hanzi: "要", meaning: "~하려 하다, 원하다" },
+            { pinyin: "zhème", hanzi: "这么", meaning: "이렇게" },
+            { pinyin: "mǎi", hanzi: "买", meaning: "사다" },
+            { pinyin: "zhè", hanzi: "这", meaning: "이, 이것" },
+            { pinyin: "jiàn", hanzi: "件", meaning: "벌 [옷을 세는 단위]" },
+            { pinyin: "yīfu", hanzi: "衣服", meaning: "옷, 의복" },
+            { pinyin: "duōshao", hanzi: "多少", meaning: "얼마, 얼마쯤" },
+            { pinyin: "qián", hanzi: "钱", meaning: "돈" },
+            { pinyin: "bǎi", hanzi: "百", meaning: "백(100)" },
+            { pinyin: "biéde", hanzi: "别的", meaning: "다른 것, 딴 것" },
+            { pinyin: "yánsè", hanzi: "颜色", meaning: "색" },
+            { pinyin: "nà", hanzi: "那", meaning: "저, 저것, 그, 그것" },
+            { pinyin: "huángsè", hanzi: "黄色", meaning: "노란색" },
+            { pinyin: "hǎokàn", hanzi: "好看", meaning: "근사하다, 보기 좋다" },
+            { pinyin: "kěyǐ", hanzi: "可以", meaning: "~해도 좋다, ~할 수 있다" },
+            { pinyin: "shì", hanzi: "试", meaning: "(시험 삼아) 해 보다" },
+            { pinyin: "yíxià", hanzi: "一下", meaning: "한번" },
+            { pinyin: "guì", hanzi: "贵", meaning: "(값이) 비싸다" },
+            { pinyin: "néng", hanzi: "能", meaning: "~할 수 있다" },
+            { pinyin: "piányi", hanzi: "便宜", meaning: "(값이) 싸다" },
+            { pinyin: "yìdiǎnr", hanzi: "一点儿", meaning: "조금, 약간" },
+            { pinyin: "jiù", hanzi: "就", meaning: "곧 바로" },
+            { pinyin: "lìzhī", hanzi: "荔枝", meaning: "리치" },
+            { pinyin: "zěnme", hanzi: "怎么", meaning: "어떻게, 어째서" },
+            { pinyin: "mài", hanzi: "卖", meaning: "팔다" },
+            { pinyin: "kuài", hanzi: "块", meaning: "위안 [중국 화폐 단위]" },
+            { pinyin: "jīn", hanzi: "斤", meaning: "근 [무게 단위]" },
+            { pinyin: "júzi", hanzi: "橘子", meaning: "귤" },
+            { pinyin: "yígòng", hanzi: "一共", meaning: "모두" },
+            { pinyin: "xuéxiào", hanzi: "学校", meaning: "학교" },
+            { pinyin: "zǒu", hanzi: "走", meaning: "가다, 떠나다" },
+            { pinyin: "jiè", hanzi: "借", meaning: "빌리다" },
+            { pinyin: "zuò", hanzi: "做", meaning: "하다" },
+            { pinyin: "píngguǒ", hanzi: "苹果", meaning: "사과" },
+            { pinyin: "kāfēi", hanzi: "咖啡", meaning: "커피" },
+            { pinyin: "hē", hanzi: "喝", meaning: "마시다" },
+            { pinyin: "Zhè ge duōshao qián?", hanzi: "这个多少钱？", meaning: "이것은 얼마입니까?" },
+            { pinyin: "Néng bu néng piányi diǎnr?", hanzi: "能不能便宜点儿？", meaning: "싸게 해줄 수 있습니까?" },
+            { pinyin: "Lìzhī zěnme mài?", hanzi: "荔枝怎么卖？", meaning: "리치는 어떻게 팝니까?" },
+            { pinyin: "Wǒ yào mǎi yì jīn lìzhī.", hanzi: "我要买一斤荔枝。", meaning: "저는 리치 한 근을 사려고 합니다." },
+            { pinyin: "Nín hǎo! Nín yào mǎi shénme?", hanzi: "您好！您要买什么？", meaning: "안녕하세요! 무엇을 사시겠어요?" },
+            { pinyin: "Zhè jiàn yīfu duōshao qián?", hanzi: "这件衣服多少钱？", meaning: "이 옷은 얼마입니까?" },
+            { pinyin: "Yìbǎiwǔ.", hanzi: "一百五。", meaning: "150위안입니다." },
+            { pinyin: "Yǒu méiyǒu biéde yánsè de?", hanzi: "有没有别的颜色的？", meaning: "다른 색깔 있습니까?" },
+            { pinyin: "Nà jiàn huángsè de zěnmeyàng?", hanzi: "那件黄色的怎么样？", meaning: "저 노란색은 어떻습니까?" },
+            { pinyin: "Hěn hǎokàn. Wǒ kěyǐ shì yíxià ma?", hanzi: "很好看。我可以试一下吗？", meaning: "아주 예쁘네요. 한번 입어봐도 될까요?" },
+            { pinyin: "Kěyǐ.", hanzi: "可以。", meaning: "가능합니다." },
+            { pinyin: "Sānbǎi'èr.", hanzi: "三百二。", meaning: "320위안입니다." },
+            { pinyin: "Zhème guì! Néng bu néng piányi diǎnr?", hanzi: "这么贵！能不能便宜点儿？", meaning: "이렇게 비싸요! 좀 싸게 해줄 수 있나요?" },
+            { pinyin: "Nà jiù sānbǎi ba.", hanzi: "那就三百吧。", meaning: "그럼 300위안에 하세요." },
+            { pinyin: "Shísān kuài qián yì jīn.", hanzi: "十三块钱一斤。", meaning: "한 근에 13위안입니다." },
+            { pinyin: "Júzi ne?", hanzi: "橘子呢？", meaning: "귤은요?" },
+            { pinyin: "Yì jīn sì kuài wǔ.", hanzi: "一斤四块五。", meaning: "한 근에 4.5위안입니다." },
+            { pinyin: "Wǒ yào yì jīn lìzhī hé sān jīn júzi. Yígòng duōshao qián?", hanzi: "我要一斤荔枝和三斤橘子。一共多少钱？", meaning: "리치 한 근과 귤 세 근을 원합니다. 모두 얼마입니까?" },
+            { pinyin: "Èrshíliù kuài wǔ.", hanzi: "二十六块五。", meaning: "26.5위안입니다." },
+            { pinyin: "Nǐ máng bu máng?", hanzi: "你忙不忙？", meaning: "바쁩니까?" },
+            { pinyin: "Nǐ qù bu qù xuéxiào?", hanzi: "你去不去学校？", meaning: "학교에 갑니까 안 갑니까?" },
+            { pinyin: "Nǐ shì bu shì Hánguó rén?", hanzi: "你是不是韩国人？", meaning: "당신은 한국인입니까?" },
+            { pinyin: "Wǒ yào xué Hànyǔ.", hanzi: "我要学汉语。", meaning: "나는 중국어를 배우려고 합니다." },
+            { pinyin: "Wǒ bù xiǎng qù.", hanzi: "我不想去。", meaning: "나는 가고 싶지 않습니다." },
+            { pinyin: "Míngtiān nǐ kěyǐ lái wǒ jiā.", hanzi: "明天你可以来我家。", meaning: "내일 당신은 우리 집에 와도 좋습니다." },
+            { pinyin: "Wǒ kěyǐ zǒu ma?", hanzi: "我可以走吗？", meaning: "제가 가도 될까요?" },
+            { pinyin: "Bù kěyǐ.", hanzi: "不可以。", meaning: "안 됩니다." },
+            { pinyin: "Wǒ néng jiāo Hànyǔ.", hanzi: "我能教汉语。", meaning: "나는 중국어를 가르칠 수 있습니다." },
+            { pinyin: "Míngtiān wǒ hěn máng, bù néng lái.", hanzi: "明天我很忙，不能来。", meaning: "내일은 아주 바빠서 올 수 없습니다." }
+        ],
+        "10": [
+            { pinyin: "chī", hanzi: "吃", meaning: "먹다" },
+            { pinyin: "guo", hanzi: "过", meaning: "~한 적이 있다 (과거 경험)" },
+            { pinyin: "cài", hanzi: "菜", meaning: "요리" },
+            { pinyin: "xǐhuan", hanzi: "喜欢", meaning: "좋아하다" },
+            { pinyin: "huì", hanzi: "会", meaning: "~(을) 할 줄 안다" },
+            { pinyin: "wǎn", hanzi: "碗", meaning: "그릇" },
+            { pinyin: "suānlàtāng", hanzi: "酸辣汤", meaning: "쏸라탕 [요리명]" },
+            { pinyin: "hái", hanzi: "还", meaning: "또, 더" },
+            { pinyin: "le", hanzi: "了", meaning: "[문장 끝에 쓰여 변화를 나타냄]" },
+            { pinyin: "dào", hanzi: "道", meaning: "[요리를 세는 단위]" },
+            { pinyin: "zhōumò", hanzi: "周末", meaning: "주말" },
+            { pinyin: "Sìchuān", hanzi: "四川", meaning: "쓰촨 [지명]" },
+            { pinyin: "yìqǐ", hanzi: "一起", meaning: "함께, 같이" },
+            { pinyin: "cónglái", hanzi: "从来", meaning: "지금까지, 여태껏" },
+            { pinyin: "qù", hanzi: "去", meaning: "가다" },
+            { pinyin: "hǎochī", hanzi: "好吃", meaning: "맛있다" },
+            { pinyin: "xiǎng", hanzi: "想", meaning: "바라다, ~하고 싶다" },
+            { pinyin: "zài", hanzi: "再", meaning: "그 위에, 더" },
+            { pinyin: "dǒng", hanzi: "懂", meaning: "알다, 이해하다" },
+            { pinyin: "tài", hanzi: "太", meaning: "너무, 아주" },
+            { pinyin: "diǎn", hanzi: "点", meaning: "(음식을) 시키다, 주문하다" },
+            { pinyin: "bǎo", hanzi: "饱", meaning: "배부르다" },
+            { pinyin: "fúwùyuán", hanzi: "服务员", meaning: "종업원" },
+            { pinyin: "hē", hanzi: "喝", meaning: "마시다" },
+            { pinyin: "chá", hanzi: "茶", meaning: "차" },
+            { pinyin: "tángcù niúròu", hanzi: "糖醋牛肉", meaning: "탕추니우러우 [요리명]" },
+            { pinyin: "yúxiāng qiézi", hanzi: "鱼香茄子", meaning: "위샹치에즈 [요리명]" },
+            { pinyin: "gōngbǎo jīdīng", hanzi: "宫保鸡丁", meaning: "꿍바오지딩 [요리명]" },
+            { pinyin: "tāng", hanzi: "汤", meaning: "탕" },
+            { pinyin: "shuō", hanzi: "说", meaning: "말하다" },
+            { pinyin: "wánr", hanzi: "玩儿", meaning: "놀다" },
+            { pinyin: "Rìběn", hanzi: "日本", meaning: "일본" },
+            { pinyin: "Fǎguó", hanzi: "法国", meaning: "프랑스" },
+            { pinyin: "Yìndù", hanzi: "印度", meaning: "인도" },
+            { pinyin: "yóuyǒng", hanzi: "游泳", meaning: "수영하다" },
+            { pinyin: "kāi chē", hanzi: "开车", meaning: "운전하다" },
+            { pinyin: "píng", hanzi: "瓶", meaning: "병" },
+            { pinyin: "jīdàn chǎofàn", hanzi: "鸡蛋炒饭", meaning: "계란볶음밥" },
+            { pinyin: "kělè", hanzi: "可乐", meaning: "콜라" },
+            { pinyin: "píjiǔ", hanzi: "啤酒", meaning: "맥주" },
+            { pinyin: "Nǐ chī guo Zhōngguó cài ma?", hanzi: "你吃过中国菜吗？", meaning: "당신은 중국 음식을 먹어 본 적이 있습니까?" },
+            { pinyin: "Nǐ huì zuò Zhōngguó cài ma?", hanzi: "你会做中国菜吗？", meaning: "중국 음식을 할 줄 압니까?" },
+            { pinyin: "Lái yì wǎn suānlàtāng.", hanzi: "来一碗酸辣汤。", meaning: "쏸라탕 한 그릇 주십시오." },
+            { pinyin: "Nǐ xiǎng chī shénme?", hanzi: "你想吃什么？", meaning: "당신은 무엇을 먹고 싶습니까?" },
+            { pinyin: "Chī guo. Wǒ hěn xǐhuan chī Zhōngguó cài.", hanzi: "吃过。我很喜欢吃中国菜。", meaning: "먹어 봤습니다. 저는 중국 음식을 아주 좋아합니다." },
+            { pinyin: "Bú huì.", hanzi: "不会。", meaning: "할 줄 모릅니다." },
+            { pinyin: "Zhōumò yìqǐ qù chī Zhōngguó cài, hǎo ma?", hanzi: "周末一起去吃中国菜，好吗？", meaning: "주말에 같이 중국 음식 먹으러 갈까요?" },
+            { pinyin: "Hǎo.", hanzi: "好。", meaning: "좋아요." },
+            { pinyin: "Wǒ bù dǒng Zhōngguó cài, nǐ diǎn ba!", hanzi: "我不懂中国菜，你点吧！", meaning: "저는 중국 음식을 잘 몰라요, 당신이 시키세요!" },
+            { pinyin: "Fúwùyuán! Lái yí ge tángcù niúròu, yí ge yúxiāng qiézi, yí ge gōngbǎo jīdīng.", hanzi: "服务员！来一个糖醋牛肉，一个鱼香茄子，一个宫保鸡丁。", meaning: "종업원! 탕추니우러우 하나, 위샹치에즈 하나, 꿍바오지딩 하나 주세요." },
+            { pinyin: "Yào tāng ma?", hanzi: "要汤吗？", meaning: "탕도 필요하십니까?" },
+            { pinyin: "Hái yào biéde ma?", hanzi: "还要别的吗？", meaning: "다른 것도 필요하십니까?" },
+            { pinyin: "Bú yào le, xièxie.", hanzi: "不要了，谢谢。", meaning: "더 필요 없습니다, 감사합니다." },
+            { pinyin: "Zhè dào Sìchuān cài, wǒ cónglái méi chī guo.", hanzi: "这道四川菜，我从来没吃过。", meaning: "이 쓰촨 요리는 저 여태껏 먹어본 적 없어요." },
+            { pinyin: "Zěnmeyàng? Hǎochī ma?", hanzi: "怎么样？好吃吗？", meaning: "어때요? 맛있나요?" },
+            { pinyin: "Hěn hǎochī.", hanzi: "很好吃。", meaning: "아주 맛있습니다." },
+            { pinyin: "Zài chī yìdiǎnr ba.", hanzi: "再吃一点儿吧。", meaning: "좀 더 드세요." },
+            { pinyin: "Tài bǎo le.", hanzi: "太饱了。", meaning: "너무 배부릅니다." },
+            { pinyin: "Nà hē yìdiǎnr chá.", hanzi: "那喝一点儿茶。", meaning: "그럼 차를 좀 마셔요." },
+            { pinyin: "Tā méi lái guo wǒ jiā.", hanzi: "他没来过我家。", meaning: "그는 우리 집에 온 적이 없습니다." },
+            { pinyin: "Nǐ xué guo Hànyǔ ma?", hanzi: "你学过汉语吗？", meaning: "당신은 중국어를 배운 적이 있습니까?" },
+            { pinyin: "Nǐ méi qù guo Běijīng ma?", hanzi: "你没去过北京吗？", meaning: "당신은 베이징에 가본 적이 없습니까?" },
+            { pinyin: "Nǐ bú huì shuō Hànyǔ ma?", hanzi: "你不会说汉语吗？", meaning: "당신은 중국어를 할 줄 모릅니까?" },
+            { pinyin: "Wǒ xiǎng qù Zhōngguó.", hanzi: "我想去中国。", meaning: "나는 중국에 가고 싶습니다." },
+            { pinyin: "Tā bù xiǎng lái zhèr.", hanzi: "他不想来这儿。", meaning: "그는 이곳에 오고 싶어 하지 않습니다." },
+            { pinyin: "Wǒmen yìqǐ qù wánr ba.", hanzi: "我们一起去玩儿吧。", meaning: "우리 함께 놀러 갑시다." },
+            { pinyin: "Nǐ míngtiān lái wǒ jiā chī fàn, hǎo ma?", hanzi: "你明天来我家吃饭，好吗？", meaning: "내일 우리 집에 와서 밥 먹을래?" }
+        ],
+        "11": [
+            { pinyin: "wéi", hanzi: "喂", meaning: "여보세요 [부르는 소리]" },
+            { pinyin: "Zhāng Míng", hanzi: "张明", meaning: "장밍 [인명]" },
+            { pinyin: "zài", hanzi: "在", meaning: "있다" },
+            { pinyin: "dǎ", hanzi: "打", meaning: "전화를 걸다" },
+            { pinyin: "shǒujī", hanzi: "手机", meaning: "휴대 전화" },
+            { pinyin: "yìzhí", hanzi: "一直", meaning: "계속해서, 줄곧" },
+            { pinyin: "guānjī", hanzi: "关机", meaning: "(기계의) 전원을 끄다" },
+            { pinyin: "kěnéng", hanzi: "可能", meaning: "아마도" },
+            { pinyin: "wǎnshang", hanzi: "晚上", meaning: "저녁, 밤" },
+            { pinyin: "huílái", hanzi: "回来", meaning: "돌아오다" },
+            { pinyin: "wèi", hanzi: "位", meaning: "분 [경어]" },
+            { pinyin: "yǐhòu", hanzi: "以后", meaning: "이후, 금후" },
+            { pinyin: "qǐng", hanzi: "请", meaning: "요청하다, 부탁하다" },
+            { pinyin: "yídìng", hanzi: "一定", meaning: "반드시, 꼭" },
+            { pinyin: "gěi", hanzi: "给", meaning: "~에게" },
+            { pinyin: "huí", hanzi: "回", meaning: "대답하다, 회답하다" },
+            { pinyin: "diànhuà", hanzi: "电话", meaning: "전화" },
+            { pinyin: "zhuǎngào", hanzi: "转告", meaning: "전언하다, 전달하다" },
+            { pinyin: "xiānsheng", hanzi: "先生", meaning: "선생, 씨 [존칭]" },
+            { pinyin: "zhèr", hanzi: "这儿", meaning: "여기, 이곳" },
+            { pinyin: "nàr", hanzi: "那儿", meaning: "거기, 그곳" },
+            { pinyin: "Shànghǎi", hanzi: "上海", meaning: "상하이 [지명]" },
+            { pinyin: "dāngrán", hanzi: "当然", meaning: "당연히, 물론" },
+            { pinyin: "dào", hanzi: "到", meaning: "도착하다" },
+            { pinyin: "jiào", hanzi: "叫", meaning: "~하게 하다, ~하도록 하다" },
+            { pinyin: "huí jiā", hanzi: "回家", meaning: "집으로 돌아가다/오다" },
+            { pinyin: "xiǎojie", hanzi: "小姐", meaning: "아가씨" },
+            { pinyin: "nǚshì", hanzi: "女士", meaning: "여사" },
+            { pinyin: "yínháng", hanzi: "银行", meaning: "은행" },
+            { pinyin: "Běijīng Dàxué", hanzi: "北京大学", meaning: "베이징 대학" },
+            { pinyin: "tóngxué", hanzi: "同学", meaning: "학우" },
+            { pinyin: "tóngshì", hanzi: "同事", meaning: "동료" },
+            { pinyin: "tóngwū", hanzi: "同屋", meaning: "룸메이트" },
+            { pinyin: "Zhāng Míng zài ma?", hanzi: "张明在吗？", meaning: "장밍 있습니까?" },
+            { pinyin: "Zhèr méiyǒu xìng Jīn de.", hanzi: "这儿没有姓金的。", meaning: "여기에는 성이 '진'인 사람은 없습니다." },
+            { pinyin: "Wǒ yídìng zhuǎngào tā.", hanzi: "我一定转告他。", meaning: "반드시 그에게 전할게요." },
+            { pinyin: "Jiào tā gěi wǒ dǎ diànhuà.", hanzi: "叫她给我打电话。", meaning: "그녀에게 나한테 전화하라고 해." },
+            { pinyin: "Tā bú zài. Nín dǎ tā de shǒujī ba!", hanzi: "他不在。您打他的手机吧！", meaning: "그는 없습니다. 그의 핸드폰으로 전화해보세요!" },
+            { pinyin: "Dǎ le, kě tā de shǒujī yìzhí guānjī.", hanzi: "打了，可他的手机一直关机。", meaning: "걸었는데 그의 핸드폰이 계속 꺼져있어요." },
+            { pinyin: "Shì ma? Tā kěnéng wǎnshang huílái. Nín shì nǎ yí wèi?", hanzi: "是吗？他可能晚上回来。您是哪一位？", meaning: "그런가요? 그는 아마 저녁에 돌아올 겁니다. 당신은 누구십니까?" },
+            { pinyin: "Wǒ jiào Zhào Liàng. Nà tā huílái yǐhòu, qǐng tā yídìng gěi wǒ huí ge diànhuà, hǎo ma?", hanzi: "我叫赵亮。那他回来以后，请他一定给我回个电话，好吗？", meaning: "저는 자오량입니다. 그럼 그가 돌아온 이후에 제게 꼭 회신 전화 좀 하라고 부탁해주세요, 괜찮죠?" },
+            { pinyin: "Hǎo, wǒ yídìng zhuǎngào tā.", hanzi: "好，我一定转告他。", meaning: "네, 제가 반드시 그에게 전하겠습니다." },
+            { pinyin: "Wéi, Jīn xiānsheng zài ma?", hanzi: "喂，金先生在吗？", meaning: "여보세요, 진 선생님 계십니까?" },
+            { pinyin: "Nín nàr bú shì 56327189 ma?", hanzi: "您那儿不是56327189吗？", meaning: "거기 56327189 아닌가요?" },
+            { pinyin: "Bù. Zhèr shì 56321789.", hanzi: "不。这儿是56321789。", meaning: "아닙니다. 여기는 56321789입니다." },
+            { pinyin: "Duìbuqǐ.", hanzi: "对不起。", meaning: "죄송합니다." },
+            { pinyin: "Wéi?", hanzi: "喂？", meaning: "여보세요?" },
+            { pinyin: "Wéi, Jiélún, nǐ hǎo!", hanzi: "喂，杰伦，你好！", meaning: "여보세요, 제룬, 안녕!" },
+            { pinyin: "Nàxián, yǒu shénme shì ma?", hanzi: "娜贤，有什么事吗？", meaning: "나현, 무슨 일 있어?" },
+            { pinyin: "Hòutiān nǐ máng bu máng?", hanzi: "后天你忙不忙？", meaning: "모레 너 바쁘니?" },
+            { pinyin: "Bú tài máng, zěnme le?", hanzi: "不太忙，怎么了？", meaning: "별로 안 바빠, 왜 그래?" },
+            { pinyin: "Wǒ de yí ge péngyou hòutiān qù Shànghǎi, nǐ néng jiàn tā ma?", hanzi: "我的一个朋友后天去上海，你能见她吗？", meaning: "내 친구 한 명이 모레 상하이에 가는데, 네가 그녀를 좀 볼 수 있을까?" },
+            { pinyin: "Dāngrán! Dào Shànghǎi yǐhòu jiào tā gěi wǒ dǎ diànhuà.", hanzi: "当然！到上海以后叫她给我打电话。", meaning: "당연하지! 상하이에 도착한 뒤에 그녀더러 내게 전화하라고 해." },
+            { pinyin: "Hǎo, xièxie!", hanzi: "好，谢谢！", meaning: "좋아, 고마워!" },
+            { pinyin: "Nǐ qǐng tā dǎ diànhuà ba!", hanzi: "你请他打电话吧！", meaning: "당신이 그에게 전화하라고 요청하세요!" },
+            { pinyin: "Wǒ xiǎng qǐng nǐ chī fàn.", hanzi: "我想请你吃饭。", meaning: "내가 너에게 밥을 사고(대접하고) 싶다." },
+            { pinyin: "Nǐ jiào tā míngtiān huílái ba!", hanzi: "你叫他明天回来吧！", meaning: "당신이 그에게 내일 돌아오라고 하세요!" },
+            { pinyin: "Lǎoshī jiào wǒ huí jiā.", hanzi: "老师叫我回家。", meaning: "선생님께서 나더러 집에 가라고 하셨다." },
+            { pinyin: "Wǒ xiǎng gěi tā mǎi yì běn shū.", hanzi: "我想给他买一本书。", meaning: "나는 그에게 책 한 권을 사주고 싶다." },
+            { pinyin: "Nǐ míngtiān gěi wǒ dǎ ge diànhuà!", hanzi: "你明天给我打个电话！", meaning: "내일 나한테 전화해라!" }
+        ],
+        "12": [
+            { pinyin: "qǐngwèn", hanzi: "请问", meaning: "말씀 좀 묻겠습니다" },
+            { pinyin: "zhàn", hanzi: "站", meaning: "역, 정거장" },
+            { pinyin: "zǒu", hanzi: "走", meaning: "걷다" },
+            { pinyin: "shízì lùkǒu", hanzi: "十字路口", meaning: "십자로, 사거리" },
+            { pinyin: "wǎng", hanzi: "往", meaning: "~쪽으로, ~(을) 향해" },
+            { pinyin: "yòu", hanzi: "右", meaning: "우측, 오른쪽" },
+            { pinyin: "guǎi", hanzi: "拐", meaning: "방향을 바꾸다" },
+            { pinyin: "fùjìn", hanzi: "附近", meaning: "부근" },
+            { pinyin: "bàngōnglóu", hanzi: "办公楼", meaning: "사무실 건물" },
+            { pinyin: "hòubian", hanzi: "后边", meaning: "뒤, 뒤쪽" },
+            { pinyin: "kàn", hanzi: "看", meaning: "보다" },
+            { pinyin: "jiù shì", hanzi: "就是", meaning: "바로 ~이다" },
+            { pinyin: "láojià", hanzi: "劳驾", meaning: "죄송합니다, 미안합니다" },
+            { pinyin: "túshūguǎn", hanzi: "图书馆", meaning: "도서관" },
+            { pinyin: "zuò", hanzi: "坐", meaning: "(탈것에) 타다" },
+            { pinyin: "lù", hanzi: "路", meaning: "노선" },
+            { pinyin: "chē", hanzi: "车", meaning: "차" },
+            { pinyin: "guò", hanzi: "过", meaning: "건너다" },
+            { pinyin: "mǎlù", hanzi: "马路", meaning: "대로, 큰길" },
+            { pinyin: "gōngyuán", hanzi: "公园", meaning: "공원" },
+            { pinyin: "Tiāntán Gōngyuán", hanzi: "天坛公园", meaning: "텐탄 공원" },
+            { pinyin: "xià", hanzi: "下", meaning: "(탈것에서) 내리다" },
+            { pinyin: "běimén", hanzi: "北门", meaning: "북문" },
+            { pinyin: "cháng", hanzi: "长", meaning: "길다" },
+            { pinyin: "shíjiān", hanzi: "时间", meaning: "시간" },
+            { pinyin: "fēn zhōng", hanzi: "分钟", meaning: "분 [시간 단위]" },
+            { pinyin: "zuǒyòu", hanzi: "左右", meaning: "가량, 안팎" },
+            { pinyin: "pángbiān", hanzi: "旁边", meaning: "옆" },
+            { pinyin: "duìmiàn", hanzi: "对面", meaning: "맞은편" },
+            { pinyin: "lǐbian", hanzi: "里边", meaning: "안쪽" },
+            { pinyin: "wàibian", hanzi: "外边", meaning: "바깥쪽" },
+            { pinyin: "shàngbian", hanzi: "上边", meaning: "위" },
+            { pinyin: "xiàbian", hanzi: "下边", meaning: "아래" },
+            { pinyin: "zhōngjiān", hanzi: "中间", meaning: "가운데" },
+            { pinyin: "qiánbian", hanzi: "前边", meaning: "앞쪽" },
+            { pinyin: "yòubian", hanzi: "右边", meaning: "오른쪽" },
+            { pinyin: "běibian", hanzi: "北边", meaning: "북쪽" },
+            { pinyin: "dōngbian", hanzi: "东边", meaning: "동쪽" },
+            { pinyin: "nánbian", hanzi: "南边", meaning: "남쪽" },
+            { pinyin: "xībian", hanzi: "西边", meaning: "서쪽" },
+            { pinyin: "zuǒbian", hanzi: "左边", meaning: "왼쪽" },
+            { pinyin: "yóujú", hanzi: "邮局", meaning: "우체국" },
+            { pinyin: "chōuti", hanzi: "抽屉", meaning: "서랍" },
+            { pinyin: "qiānbǐ", hanzi: "铅笔", meaning: "연필" },
+            { pinyin: "diànyǐngyuàn", hanzi: "电影院", meaning: "영화관" },
+            { pinyin: "cāntīng", hanzi: "餐厅", meaning: "식당" },
+            { pinyin: "yīyuàn", hanzi: "医院", meaning: "병원" },
+            { pinyin: "zhuōzi", hanzi: "桌子", meaning: "책상" },
+            { pinyin: "chuáng", hanzi: "床", meaning: "침대" },
+            { pinyin: "cídiǎn", hanzi: "词典", meaning: "사전" },
+            { pinyin: "Qù Běijīng Zhàn zěnme zǒu?", hanzi: "去北京站怎么走？", meaning: "베이징역은 어떻게 갑니까?" },
+            { pinyin: "Dào shízì lùkǒu wǎng yòu guǎi.", hanzi: "到十字路口往右拐。", meaning: "사거리에서 우회전하세요." },
+            { pinyin: "Zhèr fùjìn yǒu yínháng ma?", hanzi: "这儿附近有银行吗？", meaning: "이 근처에 은행이 있습니까?" },
+            { pinyin: "Qù túshūguǎn zuò jǐ lù chē?", hanzi: "去图书馆坐几路车？", meaning: "도서관에 가려면 몇 번 버스를 타야 합니까?" },
+            { pinyin: "Yìzhí zǒu, dào shízì lùkǒu wǎng yòu guǎi.", hanzi: "一直走，到十字路口往右拐。", meaning: "쭉 가다가, 사거리에서 우회전하세요." },
+            { pinyin: "Yǒu, jiù zài bàngōnglóu hòubian.", hanzi: "有，就在办公楼后边。", meaning: "있습니다, 바로 사무실 건물 뒤에 있어요." },
+            { pinyin: "Nǎ ge shì bàngōnglóu?", hanzi: "哪个是办公楼？", meaning: "어느 것이 사무실 건물입니까?" },
+            { pinyin: "Nǐ kàn! Nà ge jiù shì.", hanzi: "你看！那个就是。", meaning: "보세요! 저것이 바로 그겁니다." },
+            { pinyin: "Láojià, qù Běijīng Túshūguǎn zuò jǐ lù chē?", hanzi: "劳驾，去北京图书馆坐几路车？", meaning: "실례합니다, 베이징 도서관 가려면 몇 번 버스 타야 하죠?" },
+            { pinyin: "Guò mǎlù, zuò 138 lù.", hanzi: "过马路，坐138路。", meaning: "길을 건너서 138번 버스를 타세요." },
+            { pinyin: "Yào zuò jǐ zhàn?", hanzi: "要坐几站？", meaning: "몇 정거장 가야 합니까?" },
+            { pinyin: "Zuò liǎng zhàn jiù dào.", hanzi: "坐两站就到。", meaning: "두 정거장 가면 도착합니다." },
+            { pinyin: "Láojià, qù Tiāntán Gōngyuán zài nǎr xià chē?", hanzi: "劳驾，去天坛公园在哪儿下车？", meaning: "실례합니다, 텐탄 공원에 가려면 어디서 내려야 합니까?" },
+            { pinyin: "Zài Tiāntán Běimén Zhàn xià chē.", hanzi: "在天坛北门站下车。", meaning: "텐탄 북문 역에서 내리세요." },
+            { pinyin: "Hái yào duō cháng shíjiān?", hanzi: "还要多长时间？", meaning: "시간이 얼마나 더 걸립니까?" },
+            { pinyin: "Shí fēn zhōng zuǒyòu.", hanzi: "十分钟左右。", meaning: "10분 정도 걸립니다." },
+            { pinyin: "Qiánbian yǒu yí ge gōngyuán.", hanzi: "前边有一个公园。", meaning: "앞쪽에 공원이 하나 있습니다." },
+            { pinyin: "Yínháng zài yóujú yòubian.", hanzi: "银行在邮局右边。", meaning: "은행은 우체국 오른쪽에 있습니다." },
+            { pinyin: "Wǒ jiā hòubian shì yí ge yínháng.", hanzi: "我家后边是一个银行。", meaning: "우리 집 뒤는 은행 하나입니다. (존재문)" },
+            { pinyin: "Wǒ hòubian shì Zhāng lǎoshī.", hanzi: "我后边是张老师。", meaning: "내 뒤쪽은 장 선생님이십니다." }
+        ],
+        "13": [
+            { pinyin: "tiānqì", hanzi: "天气", meaning: "날씨" },
+            { pinyin: "tīng", hanzi: "听", meaning: "듣다" },
+            { pinyin: "shuō", hanzi: "说", meaning: "말하다" },
+            { pinyin: "qìwēn", hanzi: "气温", meaning: "기온" },
+            { pinyin: "dù", hanzi: "度", meaning: "도 [온도 단위]" },
+            { pinyin: "dàgài", hanzi: "大概", meaning: "대략, 대강" },
+            { pinyin: "língxià", hanzi: "零下", meaning: "영하" },
+            { pinyin: "tīngshuō", hanzi: "听说", meaning: "~라고 들었다" },
+            { pinyin: "yùbào", hanzi: "预报", meaning: "예보" },
+            { pinyin: "xiàwǔ", hanzi: "下午", meaning: "오후" },
+            { pinyin: "yǔ", hanzi: "雨", meaning: "비" },
+            { pinyin: "dài", hanzi: "带", meaning: "지니다, 휴대하다" },
+            { pinyin: "qíngtiān", hanzi: "晴天", meaning: "맑은 날씨" },
+            { pinyin: "wàibian", hanzi: "外边", meaning: "밖, 바깥쪽" },
+            { pinyin: "rè", hanzi: "热", meaning: "덥다, 뜨겁다" },
+            { pinyin: "bǐ", hanzi: "比", meaning: "~에 비하여, ~보다" },
+            { pinyin: "zuótiān", hanzi: "昨天", meaning: "어제" },
+            { pinyin: "zhēn", hanzi: "真", meaning: "정말, 참으로" },
+            { pinyin: "lěng", hanzi: "冷", meaning: "춥다, 차갑다" },
+            { pinyin: "a", hanzi: "啊", meaning: "[감탄을 나타내는 조사]" },
+            { pinyin: "dōngtiān", hanzi: "冬天", meaning: "겨울" },
+            { pinyin: "zuì", hanzi: "最", meaning: "가장" },
+            { pinyin: "dī", hanzi: "低", meaning: "낮다" },
+            { pinyin: "yǔsǎn", hanzi: "雨伞", meaning: "우산" },
+            { pinyin: "bàn", hanzi: "办", meaning: "(일 따위를) 하다, 처리하다" },
+            { pinyin: "búyòng", hanzi: "不用", meaning: "~할 필요가 없다" },
+            { pinyin: "dānxīn", hanzi: "担心", meaning: "염려하다, 걱정하다" },
+            { pinyin: "sòng", hanzi: "送", meaning: "배웅하다, 전송하다" },
+            { pinyin: "huí jiā", hanzi: "回家", meaning: "집으로 돌아오다/가다" },
+            { pinyin: "jìjié", hanzi: "季节", meaning: "계절" },
+            { pinyin: "pà", hanzi: "怕", meaning: "무서워하다, 두려워하다" },
+            { pinyin: "chūntiān", hanzi: "春天", meaning: "봄" },
+            { pinyin: "gèng", hanzi: "更", meaning: "더욱" },
+            { pinyin: "piàoliang", hanzi: "漂亮", meaning: "예쁘다" },
+            { pinyin: "kè", hanzi: "课", meaning: "수업, 강의" },
+            { pinyin: "nuǎnhuo", hanzi: "暖和", meaning: "따뜻하다" },
+            { pinyin: "liángkuai", hanzi: "凉快", meaning: "시원하다" },
+            { pinyin: "qiántiān", hanzi: "前天", meaning: "그저께" },
+            { pinyin: "shàngwǔ", hanzi: "上午", meaning: "오전" },
+            { pinyin: "xià xuě", hanzi: "下雪", meaning: "눈이 내리다" },
+            { pinyin: "míngtiān", hanzi: "明天", meaning: "내일" },
+            { pinyin: "guā fēng", hanzi: "刮风", meaning: "바람이 불다" },
+            { pinyin: "xiàtiān", hanzi: "夏天", meaning: "여름" },
+            { pinyin: "qiūtiān", hanzi: "秋天", meaning: "가을" },
+            { pinyin: "xiǎo", hanzi: "小", meaning: "(나이가) 어리다, 작다" },
+            { pinyin: "tóufa", hanzi: "头发", meaning: "머리카락" },
+            { pinyin: "duǎn", hanzi: "短", meaning: "짧다" },
+            { pinyin: "ǎi", hanzi: "矮", meaning: "키가 작다" },
+            { pinyin: "Jīntiān tiānqì zěnmeyàng?", hanzi: "今天天气怎么样？", meaning: "오늘은 날씨가 어떻습니까?" },
+            { pinyin: "Jīntiān bǐ zuótiān hái rè.", hanzi: "今天比昨天还热。", meaning: "오늘은 어제보다 더 덥습니다." },
+            { pinyin: "Tīngshuō xiàwǔ yǒu yǔ.", hanzi: "听说下午有雨。", meaning: "오후에 비가 온다고 들었어요." },
+            { pinyin: "Wǒ zuì xǐhuan dōngtiān.", hanzi: "我最喜欢冬天。", meaning: "저는 겨울을 가장 좋아합니다." },
+            { pinyin: "Tīng tiānqì yùbào shuō, jīntiān qíngtiān.", hanzi: "听天气预报说，今天晴天。", meaning: "일기예보에서 듣기로 오늘 맑다고 합니다." },
+            { pinyin: "Wàibian rè ma?", hanzi: "外边热吗？", meaning: "밖은 덥습니까?" },
+            { pinyin: "Jīntiān zhēn lěng a!", hanzi: "今天真冷啊！", meaning: "오늘 정말 춥네요!" },
+            { pinyin: "Hánguó de dōngtiān yě zhème lěng ma?", hanzi: "韩国的冬天也这么冷吗？", meaning: "한국의 겨울도 이렇게 춥습니까?" },
+            { pinyin: "Yě hěn lěng. Jīntiān de zuì dī qìwēn shì duōshao dù?", hanzi: "也很冷。今天的最低气温是多少度？", meaning: "역시 춥습니다. 오늘의 최저기온은 몇 도입니까?" },
+            { pinyin: "Dàgài língxià shí dù.", hanzi: "大概零下十度。", meaning: "대략 영하 10도입니다." },
+            { pinyin: "Wǒ méi dài yǔsǎn, zěnme bàn?", hanzi: "我没带雨伞，怎么办？", meaning: "저 우산을 안 챙겼는데 어떡하죠?" },
+            { pinyin: "Búyòng dānxīn, wǒ sòng nǐ huí jiā.", hanzi: "不用担心，我送你回家。", meaning: "걱정하지 마세요, 제가 집까지 바래다 줄게요." },
+            { pinyin: "Nǐ zuì xǐhuan nǎ ge jìjié?", hanzi: "你最喜欢哪个季节？", meaning: "당신은 어느 계절을 가장 좋아합니까?" },
+            { pinyin: "Wǒ pà lěng. Wǒ zuì xǐhuan chūntiān.", hanzi: "我怕冷。我最喜欢春天。", meaning: "저는 추위를 탑니다. 저는 봄을 가장 좋아합니다." },
+            { pinyin: "Tā bǐ nǐ gèng gāo.", hanzi: "他比你更高。", meaning: "그는 너보다 더 크다." },
+            { pinyin: "Zhè ge bǐ nà ge hái guì.", hanzi: "这个比那个还贵。", meaning: "이게 저것보다 더 비싸다." },
+            { pinyin: "Zhè jiàn yīfu zhēn piàoliang a!", hanzi: "这件衣服真漂亮啊！", meaning: "이 옷 정말 예쁘다!" },
+            { pinyin: "Jīntiān de tiānqì duō hǎo a!", hanzi: "今天的天气多好啊！", meaning: "오늘 날씨 참 좋다!" },
+            { pinyin: "Búyòng kèqi!", hanzi: "不用客气！", meaning: "천만에요! (사양할 필요 없어요)" },
+            { pinyin: "Nǐ búyòng gěi tā dǎ diànhuà.", hanzi: "你不用给他打电话。", meaning: "당신은 그에게 전화할 필요가 없습니다." },
+            { pinyin: "Búyòng xiè!", hanzi: "不用谢！", meaning: "천만에요!" },
+            { pinyin: "Wǒmen búyòng qù nàr.", hanzi: "我们不用去那儿。", meaning: "우리는 그곳에 갈 필요가 없습니다." },
+            { pinyin: "Tīngshuō tā zuìjìn hěn máng.", hanzi: "听说她最近很忙。", meaning: "듣자니 그녀가 요즘 많이 바쁘대." },
+            { pinyin: "Tīng Lín Hǎi shuō, jīntiān zuì dī qìwēn shì língxià shí dù.", hanzi: "听林海说，今天最低气温是零下十度。", meaning: "린하이에게 듣기로, 오늘 최저 기온이 영하 10도래요." },
+            { pinyin: "Tīngshuō míngtiān méiyǒu kè.", hanzi: "听说明天没有课。", meaning: "듣건대 내일 수업이 없대." },
+            { pinyin: "Tīng tiānqì yùbào shuō, míngtiān yǒu yǔ.", hanzi: "听天气预报说，明天有雨。", meaning: "일기예보에서 듣기로, 내일 비가 온대." }
+        ],
+        "14": [
+            { pinyin: "shǔjià", hanzi: "暑假", meaning: "여름 휴가, 여름 방학" },
+            { pinyin: "dǎsuan", hanzi: "打算", meaning: "~하려고 하다, ~할 작정이다" },
+            { pinyin: "Xī'ān", hanzi: "西安", meaning: "시안 [지명]" },
+            { pinyin: "lǚxíng", hanzi: "旅行", meaning: "여행(하다)" },
+            { pinyin: "huǒchē", hanzi: "火车", meaning: "기차" },
+            { pinyin: "háishi", hanzi: "还是", meaning: "아니면" },
+            { pinyin: "kěshì", hanzi: "可是", meaning: "그러나, 하지만" },
+            { pinyin: "zhídé", hanzi: "值得", meaning: "~할 만한 가치가 있다" },
+            { pinyin: "Bīngmǎyǒng", hanzi: "兵马俑", meaning: "병마용 [유적명]" },
+            { pinyin: "jiàqī", hanzi: "假期", meaning: "휴가 기간" },
+            { pinyin: "měilì", hanzi: "美丽", meaning: "아름답다" },
+            { pinyin: "dǎo", hanzi: "岛", meaning: "섬" },
+            { pinyin: "Jìzhōudǎo", hanzi: "济州岛", meaning: "제주도 [지명]" },
+            { pinyin: "fēngjǐng", hanzi: "风景", meaning: "풍경, 경치" },
+            { pinyin: "fēijī", hanzi: "飞机", meaning: "비행기" },
+            { pinyin: "lí", hanzi: "离", meaning: "~에서부터" },
+            { pinyin: "yuǎn", hanzi: "远", meaning: "(거리상) 멀다" },
+            { pinyin: "tèbié", hanzi: "特别", meaning: "특히, 아주" },
+            { pinyin: "cóng", hanzi: "从", meaning: "~부터" },
+            { pinyin: "měi", hanzi: "美", meaning: "아름답다, 예쁘다" },
+            { pinyin: "dào", hanzi: "到", meaning: "~까지, ~로" },
+            { pinyin: "rúguǒ", hanzi: "如果", meaning: "만약, 만일" },
+            { pinyin: "gāotiě", hanzi: "高铁", meaning: "고속 철도" },
+            { pinyin: "dài", hanzi: "带", meaning: "데리다, 인도하다" },
+            { pinyin: "děi", hanzi: "得", meaning: "(시간, 금전 등이) 걸리다, 필요하다" },
+            { pinyin: "duō", hanzi: "多", meaning: "(수량사 뒤에 쓰여) ~여, 남짓" },
+            { pinyin: "xiǎoshí", hanzi: "小时", meaning: "시간" },
+            { pinyin: "nàme", hanzi: "那么", meaning: "그렇게, 그런" },
+            { pinyin: "xuéxí", hanzi: "学习", meaning: "학습하다, 공부하다" },
+            { pinyin: "píngguǒ", hanzi: "苹果", meaning: "사과" },
+            { pinyin: "xiāngjiāo", hanzi: "香蕉", meaning: "바나나" },
+            { pinyin: "fàngjià", hanzi: "放假", meaning: "방학하다" },
+            { pinyin: "miàntiáo", hanzi: "面条", meaning: "국수" },
+            { pinyin: "diànyǐng", hanzi: "电影", meaning: "영화" },
+            { pinyin: "gōngjiāochē", hanzi: "公交车", meaning: "버스" },
+            { pinyin: "huǒchēzhàn", hanzi: "火车站", meaning: "기차역" },
+            { pinyin: "dìtiě", hanzi: "地铁", meaning: "지하철" },
+            { pinyin: "chuán", hanzi: "船", meaning: "배" },
+            { pinyin: "Rénchuān", hanzi: "仁川", meaning: "인천" },
+            { pinyin: "Qīngdǎo", hanzi: "青岛", meaning: "칭다오" },
+            { pinyin: "lǜchá", hanzi: "绿茶", meaning: "녹차" },
+            { pinyin: "cǎoméi", hanzi: "草莓", meaning: "딸기" },
+            { pinyin: "chūzūchē", hanzi: "出租车", meaning: "택시" },
+            { pinyin: "piào", hanzi: "票", meaning: "표" },
+            { pinyin: "Chángchéng", hanzi: "长城", meaning: "만리장성" },
+            { pinyin: "Jiǔzhàigōu", hanzi: "九寨沟", meaning: "지우자이거우" },
+            { pinyin: "Xiānggǎng", hanzi: "香港", meaning: "홍콩" },
+            { pinyin: "Díshīní Lèyuán", hanzi: "迪士尼乐园", meaning: "디즈니랜드" },
+            { pinyin: "Wǒ dǎsuan qù Xī'ān lǚxíng.", hanzi: "我打算去西安旅行。", meaning: "저는 시안으로 여행을 가려고 합니다." },
+            { pinyin: "Zuò huǒchē qù háishi zuò fēijī qù?", hanzi: "坐火车去还是坐飞机去？", meaning: "기차를 타고 갑니까 아니면 비행기를 타고 갑니까?" },
+            { pinyin: "Nǐ qù guo Hánguó ma?", hanzi: "你去过韩国吗？", meaning: "한국에 가 본 적이 있습니까?" },
+            { pinyin: "Rúguǒ nǐ lái Hánguó, wǒ yídìng dài nǐ qù.", hanzi: "如果你来韩国，我一定带你去。", meaning: "만약 당신이 한국에 온다면, 내가 꼭 데리고 가겠습니다." },
+            { pinyin: "Zhè ge shǔjià nǐ dǎsuan zuò shénme?", hanzi: "这个暑假你打算做什么？", meaning: "이번 여름 방학에 당신은 무엇을 할 계획입니까?" },
+            { pinyin: "Zuò huǒchē qù.", hanzi: "坐火车去。", meaning: "기차를 타고 갑니다." },
+            { pinyin: "Lí zhèr duō yuǎn?", hanzi: "离这儿多远？", meaning: "여기서 얼마나 멉니까?" },
+            { pinyin: "Cóng zhèr dào Xī'ān zuò gāotiě děi wǔ ge duō xiǎoshí.", hanzi: "从这儿到西安坐高铁得五个多小时。", meaning: "여기서 시안까지 고속철도를 타고 5시간 넘게 걸립니다." },
+            { pinyin: "Nàme yuǎn!", hanzi: "那么远！", meaning: "그렇게 멀어요!" },
+            { pinyin: "Kěshì zhídé qù kàn. Nǐ tīngshuō guo Bīngmǎyǒng ba?", hanzi: "可是值得去看。你听说过兵马俑吧？", meaning: "그래도 가볼 만한 가치가 있어요. 병마용 들어본 적 있으시죠?" },
+            { pinyin: "Bīngmǎyǒng jiù zài Xī'ān.", hanzi: "兵马俑就在西安。", meaning: "병마용이 바로 시안에 있습니다." },
+            { pinyin: "Zhè ge jiàqī nǐ huí Hánguó háishi zài Zhōngguó?", hanzi: "这个假期你回韩国还是在中国？", meaning: "이번 휴가 기간에 당신은 한국에 돌아갑니까 아니면 중국에 있습니까?" },
+            { pinyin: "Huí Hánguó.", hanzi: "回韩国。", meaning: "한국에 돌아갑니다." },
+            { pinyin: "Méi qù guo. Tīngshuō Hánguó yǒu yí ge hěn měilì de dǎo.", hanzi: "没去过。听说韩国有一个很美丽的岛。", meaning: "가본 적 없어요. 듣자니 한국에 아주 아름다운 섬이 하나 있다던데요." },
+            { pinyin: "Nǐ shuō de shì Jìzhōudǎo ba?", hanzi: "你说的是济州岛吧？", meaning: "제주도를 말씀하시는 거죠?" },
+            { pinyin: "Duì! Nǐ qù guo ma?", hanzi: "对！你去过吗？", meaning: "맞아요! 당신은 가본 적 있나요?" },
+            { pinyin: "Qùnián qù guo. Nàr de fēngjǐng tèbié měi.", hanzi: "去年去过。那儿的风景特别美。", meaning: "작년에 가봤어요. 그곳의 풍경은 아주 예쁩니다." },
+            { pinyin: "Wǒ yě xiǎng qù.", hanzi: "我也想去。", meaning: "저도 가고 싶어요." },
+            { pinyin: "Zhēn de ma? Nà tài hǎo le!", hanzi: "真的吗？那太好了！", meaning: "정말이요? 그거 참 잘됐네요!" },
+            { pinyin: "Nǐ yào zhè ge háishi nà ge?", hanzi: "你要这个还是那个？", meaning: "이것으로 하시겠어요 저것으로 하시겠어요?" },
+            { pinyin: "Nǐ xǐhuan chūntiān háishi qiūtiān?", hanzi: "你喜欢春天还是秋天？", meaning: "봄을 좋아하세요 아니면 가을을 좋아하세요?" },
+            { pinyin: "Wǒ jiā lí zhèr hěn yuǎn.", hanzi: "我家离这儿很远。", meaning: "우리 집은 여기서 아주 멉니다." },
+            { pinyin: "Jīntiān lí wǒ de shēngrì hái yǒu yí ge xīngqī.", hanzi: "今天离我的生日还有一个星期。", meaning: "오늘은 내 생일까지 아직 일주일이 남았다." },
+            { pinyin: "Tīng tiānqì yùbào shuō, cóng jīntiān dào hòutiān yìzhí xià yǔ.", hanzi: "听天气预报说，从今天到后天一直下雨。", meaning: "일기예보에서 듣건대, 오늘부터 모레까지 계속 비가 내린다네요." },
+            { pinyin: "Wǒ cóng bā diǎn dào shí'èr diǎn shàng kè.", hanzi: "我从八点到十二点上课。", meaning: "나는 8시부터 12시까지 수업을 듣는다." },
+            { pinyin: "Cóng zhèr dào Běijīng Zhàn děi sānshí fēn zhōng.", hanzi: "从这儿到北京站得三十分钟。", meaning: "여기서 베이징역까지 30분 걸린다." },
+            { pinyin: "Rúguǒ nǐ qù (dehuà), wǒ yě qù.", hanzi: "如果你去（的话），我也去。", meaning: "만약 당신이 가면 저도 가겠습니다." }
+        ]
+    };
+
+    var currentModeData = [];
+    var currentList = [];
+    var incorrectList = [];
+    var currentIndex = 0;
+    var score = 0;
+
+    // 특정 단원 퀴즈 시작
+    function startLessonQuiz(lessonNumStr) {
+        document.getElementById('current-mode-text').innerText = "제 " + lessonNumStr + "과 학습 중";
+        
+        // 메모리 격리를 위한 완벽한 딥 카피(Deep Copy)
+        var rawData = JSON.parse(JSON.stringify(quizData[lessonNumStr]));
+        
+        // 헷갈림 방지용 [단원 뱃지] 주입
+        for(var i=0; i<rawData.length; i++) {
+            rawData[i].lessonBadge = "제 " + lessonNumStr + "과";
+        }
+        
+        currentModeData = rawData;
+        startQuiz(currentModeData);
+    }
+
+    // 전체 단원 통합 퀴즈 시작 (중복 제거 알고리즘 적용)
+    function startAllQuiz() {
+        document.getElementById('current-mode-text').innerText = "전체 단원 모의고사 진행 중 (중복 제거됨)";
+        currentModeData = [];
+        var uniqueCheck = {}; // 중복 방지용 객체
+        
+        var allKeys = ["7", "9", "10", "11", "12", "13", "14"];
+        for (var i = 0; i < allKeys.length; i++) {
+            var rawData = JSON.parse(JSON.stringify(quizData[allKeys[i]]));
+            for(var j=0; j<rawData.length; j++) {
+                var wordKey = rawData[j].hanzi; // 한자를 고유 키로 설정
+                
+                // 만약 이전에 등장하지 않은 단어/문장이라면 추가
+                if(!uniqueCheck[wordKey]) {
+                    rawData[j].lessonBadge = "제 " + allKeys[i] + "과";
+                    currentModeData.push(rawData[j]);
+                    uniqueCheck[wordKey] = true; // 등장 체크
+                }
+            }
+        }
+        
+        startQuiz(currentModeData);
+    }
+
+    // 퀴즈 시작 및 배열 셔플
+    function startQuiz(dataArray) {
+        // 한 번 더 딥카피하여 섞기 (안전장치 2중화)
+        currentList = shuffle(JSON.parse(JSON.stringify(dataArray)));
+        incorrectList = [];
+        currentIndex = 0;
+        score = 0;
+        
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('quiz-container').style.display = 'block';
+        
+        updateStatusBar();
+        renderQuestion();
+    }
+
+    // 피셔-예이츠 셔플 알고리즘
+    function shuffle(array) {
+        var currentIdx = array.length, randomIdx;
+        while (currentIdx !== 0) {
+            randomIdx = Math.floor(Math.random() * currentIdx);
+            currentIdx--;
+            var temp = array[currentIdx];
+            array[currentIdx] = array[randomIdx];
+            array[randomIdx] = temp;
+        }
+        return array;
+    }
+
+    // 현재 문제 화면 출력
+    function renderQuestion() {
+        if (currentIndex >= currentList.length) {
+            endQuiz();
+            return;
+        }
+
+        var currentItem = currentList[currentIndex];
+        
+        document.getElementById('answer-section').style.display = 'none';
+        document.getElementById('control-show').classList.remove('hidden');
+        document.getElementById('control-judge').classList.add('hidden');
+
+        // 단원 뱃지 출력 (어느 과 문제인지 표시)
+        document.getElementById('lesson-badge-display').innerText = currentItem.lessonBadge;
+        
+        document.getElementById('pinyin-display').innerText = currentItem.pinyin;
+        document.getElementById('hanzi-display').innerText = currentItem.hanzi;
+        document.getElementById('meaning-display').innerText = currentItem.meaning;
+    }
+
+    // 정답 확인 버튼
+    function showAnswer() {
+        document.getElementById('answer-section').style.display = 'flex';
+        document.getElementById('control-show').classList.add('hidden');
+        document.getElementById('control-judge').classList.remove('hidden');
+    }
+
+    // 맞음/틀림 판단
+    function nextQuestion(isCorrect) {
+        if (isCorrect) {
+            score++;
+        } else {
+            incorrectList.push(currentList[currentIndex]);
+        }
+        
+        currentIndex++;
+        updateStatusBar();
+        renderQuestion();
+    }
+
+    // 상단 진행바 및 점수 업데이트
+    function updateStatusBar() {
+        var total = currentList.length;
+        var current = Math.min(currentIndex + 1, total);
+        document.getElementById('progress').innerText = "진행: " + current + " / " + total;
+        document.getElementById('score-display').innerText = "점수: " + score;
+    }
+
+    // 퀴즈 종료 처리
+    function endQuiz() {
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        
+        var total = currentList.length;
+        document.getElementById('final-score').innerText = "총 " + total + "문제 중 " + score + "문제를 맞혔습니다.";
+
+        var retryBtn = document.getElementById('btn-retry-wrong');
+        if (incorrectList.length > 0) {
+            retryBtn.classList.remove('hidden');
+        } else {
+            retryBtn.classList.add('hidden');
+        }
+    }
+
+    // 틀린 문제만 다시 풀기
+    function retryWrong() {
+        if (incorrectList.length > 0) {
+            startQuiz(incorrectList);
+        }
+    }
+
+    // 현재 선택했던 모드(과 or 전체) 다시 처음부터
+    function restartCurrentMode() {
+        startQuiz(currentModeData);
+    }
+
+    // 메인 홈 화면으로 돌아가기
+    function goHome() {
+        document.getElementById('quiz-container').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'none';
+        document.getElementById('home-screen').style.display = 'flex';
+        document.getElementById('current-mode-text').innerText = '100점 기원! 완벽 대비 (중복 제거됨)';
+    }
+</script>
+
+</body>
+</html>
